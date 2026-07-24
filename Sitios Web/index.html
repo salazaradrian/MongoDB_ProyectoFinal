@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCSS - Portal de Inicio</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .bg-ccss { background-color: #0d529c; }
+
+    /* ================= MARCA DE AGUA DE FONDO ================= */
+    body {
+      position: relative;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;
+      height: 450px;
+      background-image: url('logo.png'); /* Ruta a tu logo local */
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.06;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card, .navbar, footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-modulo {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: none;
+      border-radius: 12px;
+    }
+
+    .card-modulo:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
+    }
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- BARRA SUPERIOR INSTITUCIONAL CON LOGO -->
+  <nav class="navbar navbar-dark bg-ccss shadow-sm py-2 mb-4">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center">
+        <!-- LOGO CCSS LOCAL -->
+        <img 
+          src="logo.png" 
+          alt="Logo CCSS" 
+          height="50" 
+          class="me-3 bg-white p-1 rounded"
+        >
+        
+        <span class="navbar-brand fw-bold fs-4 mb-0">
+          Sistema de Gestión Quirúrgica
+          <span class="fs-6 fw-normal ms-2 opacity-75 d-none d-md-inline">| Caja Costarricense de Seguro Social</span>
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="container my-auto py-3">
+    <div class="text-center mb-5">
+      <h1 class="fw-bold text-dark display-5 mb-2">Portal Principal de Servicios</h1>
+      <p class="text-muted fs-5">Seleccione el módulo al que desea ingresar</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      
+      <!-- MÓDULO 1: PACIENTES / LISTA DE ESPERA (CRUD) -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card card-modulo shadow-sm p-3 text-center h-100 bg-white">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <div class="text-primary mb-3">
+                <i class="fa-solid fa-users-rectangle display-4"></i>
+              </div>
+              <h4 class="fw-bold text-dark">Lista de Espera</h4>
+              <p class="text-muted small">
+                Gestión completa (CRUD) de pacientes inscritos, niveles de urgencia y subdocumentos polimórficos de MongoDB.
+              </p>
+            </div>
+            <a href="paciente.html" class="btn btn-primary fw-bold py-2 mt-3 w-100">
+              <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Ingresar Pacientes
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO 2: GESTIÓN DE QUIRÓFANOS Y HOSPITALES -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card card-modulo shadow-sm p-3 text-center h-100 bg-white">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <div class="text-success mb-3">
+                <i class="fa-solid fa-hospital-user display-4"></i>
+              </div>
+              <h4 class="fw-bold text-dark">Quirófanos y Hospitales</h4>
+              <p class="text-muted small">
+                Monitoreo de infraestructura física, centros de salud y arreglo embebido de quirófanos con estados operativos.
+              </p>
+            </div>
+            <a href="hospitales.html" class="btn btn-success fw-bold py-2 mt-3 w-100">
+              <i class="fa-solid fa-door-open me-2"></i> Ver Hospitales
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO 3: GEOLOCALIZACIÓN Y RED HOSPITALARIA (APUNTA A mapa.html) -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card card-modulo shadow-sm p-3 text-center h-100 bg-white">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <div class="text-warning mb-3">
+                <i class="fa-solid fa-map-location-dot display-4"></i>
+              </div>
+              <h4 class="fw-bold text-dark">Red Geoespacial</h4>
+              <p class="text-muted small">
+                Ubicación geoespacial de centros médicos y distancias relativas usando coordenadas GeoJSON de MongoDB.
+              </p>
+            </div>
+            <a href="mapa.html" class="btn btn-warning text-dark fw-bold py-2 mt-3 w-100">
+              <i class="fa-solid fa-earth-americas me-2"></i> Ver Mapa Red
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PIE DE PÁGINA INSTITUCIONAL -->
+  <footer class="bg-dark text-white text-center py-3 mt-auto">
+    <small class="opacity-75">
+      © 2026 Caja Costarricense de Seguro Social (CCSS) — Todos los derechos reservados.
+    </small>
+  </footer>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+</body>
+</html>

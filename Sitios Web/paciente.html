@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCSS - Gestión de Lista de Espera</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .bg-ccss { background-color: #0d529c; }
+    .btn-acciones { font-size: 0.85rem; padding: 0.35rem 0.65rem; }
+
+    /* ================= MARCA DE AGUA DE FONDO ================= */
+    body {
+      position: relative;
+      min-height: 100vh;
+      background-color: #f8f9fa; /* Color gris claro de Bootstrap */
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;                 /* Ajusta el tamaño deseado del logo */
+      height: 450px;
+      background-image: url('logo.png'); /* Ruta a tu logo local */
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.06;                /* Transparencia (0.05 a 0.10 recomendado) */
+      pointer-events: none;         /* Permite hacer clic en los elementos detrás de la marca */
+      z-index: 0;                   /* Queda detrás de todo el contenido */
+    }
+
+    /* Aseguramos que las tarjetas se vean nítidas sobre la marca de agua */
+    .card, .navbar {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- BARRA SUPERIOR INSTITUCIONAL -->
+  <nav class="navbar navbar-dark bg-ccss shadow-sm py-3 mb-4">
+    <div class="container-fluid px-4">
+      <span class="navbar-brand fw-bold fs-4 mb-0">
+        🏥 Lista Nacional de Espera Quirúrgica <span class="fs-6 fw-normal ms-2 opacity-75">| CCSS</span>
+      </span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success fw-bold px-3" onclick="abrirModalCrear()">
+          <i class="fa-solid fa-user-plus me-1"></i> Agregar Paciente
+        </button>
+        <button class="btn btn-warning text-dark fw-bold" onclick="obtenerTodosLosPacientes()">
+          <i class="fa-solid fa-rotate-right me-1"></i> Sincronizar
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENEDOR DE LA TABLA COMPLETA -->
+  <div class="container-fluid px-4">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-dark text-white py-3">
+        <h5 class="mb-0 fw-bold">
+          <i class="fa-solid fa-database me-2"></i> Registro de Pacientes Inscritos
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Cédula</th>
+                <th>Nombre Completo</th>
+                <th>Provincia</th>
+                <th>Especialidad</th>
+                <th>Diagnóstico Principal</th>
+                <th class="text-center">Urgencia</th>
+                <th>Estado</th>
+                <th>Detalles Clínicos</th>
+                <th class="text-center pe-4" style="min-width: 140px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-todos-pacientes">
+              <!-- Se cargan dinámicamente desde JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARA AGREGAR / EDITAR PACIENTE -->
+  <div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-ccss text-white">
+          <h5 class="modal-title fw-bold" id="modalTitulo">Agregar Nuevo Paciente</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="formPaciente">
+            <input type="hidden" id="pacienteId">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Cédula</label>
+                <input type="text" class="form-control" id="cedula" required placeholder="Ej: 112340567">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Nombre Completo</label>
+                <input type="text" class="form-control" id="nombre" required placeholder="Ej: Juan Pérez">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Provincia</label>
+                <select class="form-select" id="provincia" required>
+                  <option value="San José">San José</option>
+                  <option value="Alajuela">Alajuela</option>
+                  <option value="Cartago">Cartago</option>
+                  <option value="Heredia">Heredia</option>
+                  <option value="Guanacaste">Guanacaste</option>
+                  <option value="Puntarenas">Puntarenas</option>
+                  <option value="Limón">Limón</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Especialidad Requerida</label>
+                <input type="text" class="form-control" id="especialidad" required placeholder="Ej: Ortopedia, Cardiología">
+              </div>
+
+              <div class="col-md-8">
+                <label class="form-label fw-bold">Diagnóstico Principal</label>
+                <input type="text" class="form-control" id="diagnostico" required placeholder="Ej: Artrosis severa de rodilla">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold">Nivel de Urgencia (1-5)</label>
+                <input type="number" class="form-control" id="urgencia" min="1" max="5" value="3" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Estado en Lista</label>
+                <select class="form-select" id="estado">
+                  <option value="En Espera">En Espera</option>
+                  <option value="Notificado">Notificado</option>
+                  <option value="Asignado">Asignado</option>
+                  <option value="Rechazado">Rechazado</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Fecha de Ingreso</label>
+                <input type="date" class="form-control" id="fechaIngreso">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-bold text-primary">
+                  Detalles Clínicos Polimórficos (Formato JSON)
+                </label>
+                <textarea class="form-control font-monospace" id="detallesClinicos" rows="3" 
+                  placeholder='{"articulacion": "Rodilla", "requiere_protesis": true}'></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary fw-bold" onclick="guardarPaciente()">
+            <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Registro
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS BOOTSTRAP OBLIGATORIO PARA EL MODAL -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+  <script src="paciente.js"></script>
+</body>
+</html>
