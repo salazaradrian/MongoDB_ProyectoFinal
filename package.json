@@ -1,0 +1,32 @@
+{
+  "name": "mongodb_proyectofinal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "npx nodemon src/app.js",
+    "ui": "npx live-server --port=5000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salazaradrian/MongoDB_ProyectoFinal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/salazaradrian/MongoDB_ProyectoFinal/issues"
+  },
+  "homepage": "https://github.com/salazaradrian/MongoDB_ProyectoFinal#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mongoose": "^9.8.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

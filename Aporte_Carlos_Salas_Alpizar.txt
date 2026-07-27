@@ -1,0 +1,6 @@
+Aporte - Carlos Salas Alpízar: Configuración dinámica de entorno y resolución de conflictos de puertos para el despliegue local.
+
+Descripción del aporte:
+- Implementación de un puerto dinámico en el backend mediante Express (process.env.PORT || 3000) para garantizar compatibilidad multiplataforma y evitar bloqueos en equipos de desarrollo.
+- Integración de 'live-server' local en las dependencias del proyecto y configuración de scripts optimizados en el archivo package.json ('dev' con npx nodemon y 'ui' con npx live-server --port=5000) para solucionar el error de respuesta vacía (ERR_EMPTY_RESPONSE) provocado por la caché de extensiones en Windows.
+- Estandarización de la estructura raíz y documentación de la guía de ejecución paso a paso para el equipo de trabajo.

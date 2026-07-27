@@ -1,17 +1,179 @@
-const API_URL = 'http://localhost:3000/api/pacientes';
+const API_URL = 'http://localhost:3000/api/pacientes'; 
 
-let listaPacientesLocal = [];
-let modalBootstrap = null;
+let pacienteActual = null;
+let tiempoRestante = 15 * 60; 
+let intervaloTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  const modalEl = document.getElementById('modalPaciente');
-  if (modalEl && typeof bootstrap !== 'undefined') {
-    modalBootstrap = new bootstrap.Modal(modalEl);
-  }
+  cargarPacientePorCedula('112340567');
   obtenerTodosLosPacientes();
 });
 
-// 1. OBTENER PACIENTES (GET)
+async function cargarPacientePorCedula(cedulaDada) {
+  const inputCedula = document.getElementById('input-cedula');
+  const cedula = cedulaDada || (inputCedula ? inputCedula.value : '');
+
+  try {
+    const res = await fetch(`${API_URL}?cedula=${cedula}`);
+    const data = await res.json();
+
+    pacienteActual = Array.isArray(data) ? data[0] : data;
+
+    if (!pacienteActual || !pacienteActual.nombre) {
+      pacienteActual = {
+        _id: "64b1f28e3a9a8d0012f3e8a1",
+        nombre: "Amabia Robesca",
+        cedula: cedula || "112340567",
+        ubicacion: { type: "Point", coordinates: [-84.4271, 10.3238] },
+        provincia: "Alajuela",
+        especialidad_requerida: "Ortopedia",
+        diagnostico_principal: "Artrosis severa de rodilla derecha",
+        estado_lista: "Notificado", 
+        fecha_ingreso_lista: "2026-01-15T00:00:00.000Z",
+        nivel_urgencia: 4,
+        detalles_clinicos: {
+          articulacion: "Rodilla Derecha",
+          requiere_protesis: true,
+          material_protesis: "Titanio Biomédico",
+          movilidad_restringida_porcentaje: "75%"
+        }
+      };
+    }
+
+    renderizarFichaPaciente(pacienteActual);
+
+  } catch (error) {
+    console.error("Error fetching paciente:", error);
+  }
+}
+
+function renderizarFichaPaciente(p) {
+  document.getElementById('nombre-paciente').textContent = p.nombre;
+  document.getElementById('cedula-paciente').textContent = `Cédula: ${p.cedula}`;
+  document.getElementById('especialidad').textContent = p.especialidad_requerida;
+  document.getElementById('provincia').textContent = p.provincia;
+  document.getElementById('diagnostico').textContent = p.diagnostico_principal;
+  document.getElementById('urgencia-nivel').textContent = `Nivel ${p.nivel_urgencia}/5`;
+
+  if (p.fecha_ingreso_lista) {
+    const fecha = new Date(p.fecha_ingreso_lista);
+    document.getElementById('fecha-ingreso').textContent = fecha.toLocaleDateString();
+  }
+
+  const badgeEstado = document.getElementById('badge-estado');
+  badgeEstado.textContent = p.estado_lista;
+  
+  if (p.estado_lista === 'Notificado') {
+    badgeEstado.className = "badge bg-warning text-dark badge-estado";
+  } else if (p.estado_lista === 'Asignado') {
+    badgeEstado.className = "badge bg-success badge-estado";
+  } else if (p.estado_lista === 'Rechazado') {
+    badgeEstado.className = "badge bg-danger badge-estado";
+  } else {
+    badgeEstado.className = "badge bg-secondary badge-estado";
+  }
+
+  renderizarDetallesPolimorficos(p.detalles_clinicos);
+
+  const bannerAlerta = document.getElementById('banner-alerta');
+  const confirmacion = document.getElementById('pantalla-confirmacion');
+
+  confirmacion.classList.add('d-none');
+
+  if (p.estado_lista === 'Notificado') {
+    bannerAlerta.classList.remove('d-none');
+    tiempoRestante = 15 * 60;
+    iniciarCronometro();
+  } else {
+    bannerAlerta.classList.add('d-none');
+    clearInterval(intervaloTimer);
+  }
+}
+
+function renderizarDetallesPolimorficos(detalles) {
+  const contenedor = document.getElementById('contenedor-polimorfico');
+  contenedor.innerHTML = '';
+
+  if (!detalles || Object.keys(detalles).length === 0) {
+    contenedor.innerHTML = '<em class="text-muted">Sin detalles específicos registrados.</em>';
+    return;
+  }
+
+  for (const [clave, valor] of Object.entries(detalles)) {
+    const claveFormateada = clave.replace(/_/g, ' ').toUpperCase();
+    
+    let valorFormateado = valor;
+    if (typeof valor === 'boolean') {
+      valorFormateado = valor ? 'Sí ✅' : 'No ❌';
+    }
+
+    contenedor.innerHTML += `
+      <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+        <span class="text-muted small fw-semibold">${claveFormateada}:</span>
+        <strong class="text-dark fs-6">${valorFormateado}</strong>
+      </div>
+    `;
+  }
+}
+
+function iniciarCronometro() {
+  const displayTimer = document.getElementById('cronometro');
+  clearInterval(intervaloTimer);
+
+  intervaloTimer = setInterval(() => {
+    let min = Math.floor(tiempoRestante / 60);
+    let seg = tiempoRestante % 60;
+
+    displayTimer.textContent = `${min < 10 ? '0' : ''}${min}:${seg < 10 ? '0' : ''}${seg}`;
+
+    if (tiempoRestante <= 0) {
+      clearInterval(intervaloTimer);
+      responderOferta('Expirado');
+    } else {
+      tiempoRestante--;
+    }
+  }, 1000);
+}
+
+async function responderOferta(nuevoEstado) {
+  clearInterval(intervaloTimer);
+
+  try {
+    await fetch(`${API_URL}/${pacienteActual._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado_lista: nuevoEstado })
+    });
+  } catch (e) {
+    console.log("Fallback local...");
+  }
+
+  pacienteActual.estado_lista = nuevoEstado;
+  
+  document.getElementById('banner-alerta').classList.add('d-none');
+  
+  const confirmacion = document.getElementById('pantalla-confirmacion');
+  confirmacion.classList.remove('d-none');
+
+  const icono = document.getElementById('icono-resultado');
+  const titulo = document.getElementById('titulo-resultado');
+  const mensaje = document.getElementById('mensaje-resultado');
+
+  if (nuevoEstado === 'Asignado') {
+    confirmacion.className = "alert alert-success text-center p-4 mb-4 shadow-sm";
+    icono.innerHTML = '<i class="fa-solid fa-circle-check text-success display-4"></i>';
+    titulo.textContent = '¡Quirófano Reservado Exitosamente!';
+    mensaje.textContent = 'La confirmación ha sido notificada a la central hospitalaria de la CCSS.';
+  } else {
+    confirmacion.className = "alert alert-warning text-center p-4 mb-4 shadow-sm";
+    icono.innerHTML = '<i class="fa-solid fa-circle-xmark text-warning display-4"></i>';
+    titulo.textContent = 'Cupo Declinado';
+    mensaje.textContent = 'Has rechazado la oportunidad. El sistema avanzará al siguiente candidato sin mover tu lugar prioritario.';
+  }
+
+  obtenerTodosLosPacientes();
+}
+
 async function obtenerTodosLosPacientes() {
   const tablaBody = document.getElementById('tabla-todos-pacientes');
 
@@ -20,210 +182,71 @@ async function obtenerTodosLosPacientes() {
     let pacientes = await res.json();
 
     if (!Array.isArray(pacientes) || pacientes.length === 0) {
-      pacientes = getPacientesEjemplo();
+      pacientes = [
+        {
+          _id: "64b1f28e3a9a8d0012f3e8a1",
+          cedula: "112340567",
+          nombre: "Amabia Robesca",
+          especialidad_requerida: "Ortopedia",
+          nivel_urgencia: 4,
+          estado_lista: "Notificado",
+          detalles_clinicos: { articulacion: "Rodilla", requiere_protesis: true, material: "Titanio" }
+        },
+        {
+          _id: "64b1f28e3a9a8d0012f3e8a2",
+          cedula: "205550123",
+          nombre: "Carlos Alvarado",
+          especialidad_requerida: "Oftalmología",
+          nivel_urgencia: 2,
+          estado_lista: "En Espera",
+          detalles_clinicos: { ojo: "Izquierdo", dioptrias: 3.5, catarata: true }
+        },
+        {
+          _id: "64b1f28e3a9a8d0012f3e8a3",
+          cedula: "304440899",
+          nombre: "Elena Gómez",
+          especialidad_requerida: "Cardiología",
+          nivel_urgencia: 5,
+          estado_lista: "Asignado",
+          detalles_clinicos: { marcapasos: true, fraccion_eyeccion: "45%" }
+        }
+      ];
     }
 
-    listaPacientesLocal = pacientes;
-    renderizarTabla(pacientes);
+    tablaBody.innerHTML = '';
 
-  } catch (error) {
-    console.log('API no disponible. Cargando datos locales de demostración...');
-    listaPacientesLocal = getPacientesEjemplo();
-    renderizarTabla(listaPacientesLocal);
-  }
-}
+    pacientes.forEach(p => {
+      let badgeEstado = 'bg-secondary';
+      if (p.estado_lista === 'Notificado') badgeEstado = 'bg-warning text-dark';
+      if (p.estado_lista === 'Asignado') badgeEstado = 'bg-success';
+      if (p.estado_lista === 'Rechazado') badgeEstado = 'bg-danger';
 
-// DATOS DE PRUEBA INICIALES (3 PACIENTES)
-function getPacientesEjemplo() {
-  return [
-    {
-      _id: "64b1f28e3a9a8d0012f3e8a1",
-      cedula: "112340567",
-      nombre: "Amabia Robesca",
-      provincia: "Alajuela",
-      especialidad_requerida: "Ortopedia",
-      diagnostico_principal: "Artrosis severa de rodilla",
-      nivel_urgencia: 4,
-      estado_lista: "Notificado",
-      fecha_ingreso_lista: "2026-01-15",
-      detalles_clinicos: { articulacion: "Rodilla Derecha", requiere_protesis: true, material: "Titanio" }
-    },
-    {
-      _id: "64b1f28e3a9a8d0012f3e8a2",
-      cedula: "205550123",
-      nombre: "Carlos Alvarado",
-      provincia: "San José",
-      especialidad_requerida: "Oftalmología",
-      diagnostico_principal: "Catarata senil avanzada",
-      nivel_urgencia: 2,
-      estado_lista: "En Espera",
-      fecha_ingreso_lista: "2026-02-10",
-      detalles_clinicos: { ojo: "Izquierdo", dioptrias: 3.5, catarata: true }
-    },
-    {
-      _id: "64b1f28e3a9a8d0012f3e8a3",
-      cedula: "109870654",
-      nombre: "Beatriz Solís",
-      provincia: "Cartago",
-      especialidad_requerida: "Cardiología",
-      diagnostico_principal: "Bloqueo AV completo",
-      nivel_urgencia: 5,
-      estado_lista: "Asignado",
-      fecha_ingreso_lista: "2026-03-01",
-      detalles_clinicos: { marcapasos_requerido: true, tipo_camara: "Bicameral", fraccion_eyeccion: "50%" }
-    }
-  ];
-}
+      let detallesTexto = 'Sin especificaciones';
+      if (p.detalles_clinicos) {
+        detallesTexto = Object.entries(p.detalles_clinicos)
+          .map(([key, val]) => `<span class="text-primary fw-semibold">${key}:</span> ${val}`)
+          .join(' | ');
+      }
 
-// 2. RENDERIZAR TABLA CON BOTONES DE EDITAR Y ELIMINAR VISIBLES
-function renderizarTabla(pacientes) {
-  const tablaBody = document.getElementById('tabla-todos-pacientes');
-  tablaBody.innerHTML = '';
-
-  if (pacientes.length === 0) {
-    tablaBody.innerHTML = `<tr><td colspan="9" class="text-center p-4 text-muted">No hay pacientes registrados en la lista.</td></tr>`;
-    return;
-  }
-
-  pacientes.forEach(p => {
-    let badgeEstado = 'bg-secondary';
-    if (p.estado_lista === 'Notificado') badgeEstado = 'bg-warning text-dark';
-    if (p.estado_lista === 'Asignado') badgeEstado = 'bg-success';
-    if (p.estado_lista === 'Rechazado') badgeEstado = 'bg-danger';
-
-    // Formatear subdocumento polimórfico
-    let detallesTexto = 'Sin datos';
-    if (p.detalles_clinicos && Object.keys(p.detalles_clinicos).length > 0) {
-      detallesTexto = Object.entries(p.detalles_clinicos)
-        .map(([key, val]) => {
-          let valorFormateado = typeof val === 'boolean' ? (val ? 'Sí' : 'No') : val;
-          return `<span class="text-primary fw-semibold">${key.replace(/_/g, ' ')}:</span> ${valorFormateado}`;
-        })
-        .join(' | ');
-    }
-
-    tablaBody.innerHTML += `
-      <tr>
-        <td class="ps-4"><strong>${p.cedula}</strong></td>
-        <td class="fw-semibold">${p.nombre}</td>
-        <td>${p.provincia || 'N/A'}</td>
-        <td>${p.especialidad_requerida}</td>
-        <td><small class="text-muted">${p.diagnostico_principal || 'N/A'}</small></td>
-        <td class="text-center"><span class="badge bg-danger fs-6">${p.nivel_urgencia}/5</span></td>
-        <td><span class="badge ${badgeEstado} px-3 py-2">${p.estado_lista}</span></td>
-        <td><small>${detallesTexto}</small></td>
-        <td class="text-center pe-4">
-          <div class="d-flex justify-content-center gap-1">
-            <button class="btn btn-primary btn-acciones" onclick="abrirModalEditar('${p._id}')" title="Editar Registro">
-              <i class="fa-solid fa-pen-to-square me-1"></i>Editar
+      tablaBody.innerHTML += `
+        <tr>
+          <td class="ps-4"><strong>${p.cedula}</strong></td>
+          <td class="fw-semibold">${p.nombre}</td>
+          <td>${p.especialidad_requerida}</td>
+          <td class="text-center"><span class="badge bg-danger fs-6">${p.nivel_urgencia}/5</span></td>
+          <td><span class="badge ${badgeEstado} px-3 py-2">${p.estado_lista}</span></td>
+          <td><small>${detallesTexto}</small></td>
+          <td class="text-center pe-4">
+            <button class="btn btn-sm btn-outline-primary fw-bold" onclick="cargarPacientePorCedula('${p.cedula}')">
+              <i class="fa-solid fa-eye me-1"></i> Ver Ficha
             </button>
-            <button class="btn btn-danger btn-acciones" onclick="eliminarPaciente('${p._id}')" title="Eliminar Registro">
-              <i class="fa-solid fa-trash me-1"></i>Borrar
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-}
+          </td>
+        </tr>
+      `;
+    });
 
-// 3. FUNCIONES DE MODAL CREAR / EDITAR
-function abrirModalCrear() {
-  document.getElementById('formPaciente').reset();
-  document.getElementById('pacienteId').value = '';
-  document.getElementById('modalTitulo').textContent = 'Agregar Nuevo Paciente';
-  document.getElementById('fechaIngreso').value = new Date().toISOString().split('T')[0];
-  document.getElementById('detallesClinicos').value = JSON.stringify({ atributo_ejemplo: "valor" }, null, 2);
-  
-  if (modalBootstrap) modalBootstrap.show();
-}
-
-function abrirModalEditar(id) {
-  const p = listaPacientesLocal.find(pac => pac._id === id);
-  if (!p) return;
-
-  document.getElementById('pacienteId').value = p._id;
-  document.getElementById('cedula').value = p.cedula;
-  document.getElementById('nombre').value = p.nombre;
-  document.getElementById('provincia').value = p.provincia || 'San José';
-  document.getElementById('especialidad').value = p.especialidad_requerida;
-  document.getElementById('diagnostico').value = p.diagnostico_principal;
-  document.getElementById('urgencia').value = p.nivel_urgencia;
-  document.getElementById('estado').value = p.estado_lista;
-  
-  if (p.fecha_ingreso_lista) {
-    document.getElementById('fechaIngreso').value = p.fecha_ingreso_lista.split('T')[0];
-  }
-
-  document.getElementById('detallesClinicos').value = JSON.stringify(p.detalles_clinicos || {}, null, 2);
-  document.getElementById('modalTitulo').textContent = `Editar Paciente: ${p.nombre}`;
-
-  if (modalBootstrap) modalBootstrap.show();
-}
-
-// 4. GUARDAR REGISTRO (POST / PUT)
-async function guardarPaciente() {
-  const id = document.getElementById('pacienteId').value;
-
-  let detallesParsed = {};
-  try {
-    detallesParsed = JSON.parse(document.getElementById('detallesClinicos').value);
-  } catch (e) {
-    alert('El campo "Detalles Clínicos" debe ser un formato JSON válido.');
-    return;
-  }
-
-  const payload = {
-    cedula: document.getElementById('cedula').value,
-    nombre: document.getElementById('nombre').value,
-    provincia: document.getElementById('provincia').value,
-    especialidad_requerida: document.getElementById('especialidad').value,
-    diagnostico_principal: document.getElementById('diagnostico').value,
-    nivel_urgencia: Number(document.getElementById('urgencia').value),
-    estado_lista: document.getElementById('estado').value,
-    fecha_ingreso_lista: document.getElementById('fechaIngreso').value,
-    detalles_clinicos: detallesParsed
-  };
-
-  try {
-    if (id) {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } else {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    }
-    if (modalBootstrap) modalBootstrap.hide();
-    obtenerTodosLosPacientes();
   } catch (error) {
-    // Si la API falla o no existe, actualiza de forma local en la tabla
-    if (id) {
-      const idx = listaPacientesLocal.findIndex(p => p._id === id);
-      if (idx !== -1) listaPacientesLocal[idx] = { _id: id, ...payload };
-    } else {
-      listaPacientesLocal.push({ _id: Date.now().toString(), ...payload });
-    }
-    
-    if (modalBootstrap) modalBootstrap.hide();
-    renderizarTabla(listaPacientesLocal);
-  }
-}
-
-// 5. ELIMINAR PACIENTE (DELETE)
-async function eliminarPaciente(id) {
-  if (!confirm('¿Está seguro de que desea eliminar este paciente de la lista?')) return;
-
-  try {
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-    obtenerTodosLosPacientes();
-  } catch (error) {
-    listaPacientesLocal = listaPacientesLocal.filter(p => p._id !== id);
-    renderizarTabla(listaPacientesLocal);
+    console.error('Error fetching list:', error);
+    tablaBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger p-3">Error al conectar con la API de MongoDB.</td></tr>`;
   }
 }
