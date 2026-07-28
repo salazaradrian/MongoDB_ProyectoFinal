@@ -2,6 +2,10 @@
 
 Back-end (Node.js + Express + Mongoose) para el proyecto de Bases de Datos NoSQL: optimización de infraestructura hospitalaria y listas de espera de la CCSS.
 
+## Repositorio Github  - Publico
+
+https://github.com/salazaradrian/MongoDB_ProyectoFinal
+
 ## Requisitos
 
 - Node.js
