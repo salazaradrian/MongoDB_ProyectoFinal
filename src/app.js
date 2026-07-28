@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/DB');
+const bodyParser = require('body-parser');
+const connectDB = require('./config/db');
 const hospitalesRoutes = require('./routes/hospitalesRoutes');
 const pacientesRoutes = require('./routes/pacientesRoutes');
-
 
 const app = express();
 
 connectDB();
 
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
 app.use('/api/hospitales', hospitalesRoutes);
 app.use('/api/pacientes', pacientesRoutes);
