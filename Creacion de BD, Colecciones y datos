@@ -1,0 +1,349 @@
+use("CCSS_Optimizacion_Quirofanos");
+
+
+// CREACIÓN DE COLECCIONES E ÍNDICES
+
+
+// Creación explícita de colecciones
+db.createCollection("pacientes");
+db.createCollection("hospitales_infraestructura");
+db.createCollection("alertas_transacciones");
+
+// Índices para la colección PACIENTES
+// Permite filtrar por especialidad, ordenar por urgencia y hacer búsquedas geoespaciales rápidamente
+db.pacientes.createIndex({ 
+  "ubicacion": "2dsphere", 
+  "especialidad_requerida": 1, 
+  "nivel_urgencia": -1 
+});
+
+// Índices para la colección HOSPITALES
+db.hospitales_infraestructura.createIndex({ 
+  "coordenadas": "2dsphere", 
+  "quirofanos.especialidad_asignada": 1 
+});
+
+// Índices para ALERTAS Y TRANSACCIONES
+db.alertas_transacciones.createIndex({ 
+  "estado_proceso": 1, 
+  "fecha_alerta": -1 
+});
+
+
+
+// Datos: 5 HOSPITALES PRINCIPALES DE CR
+
+
+db.hospitales_infraestructura.insertMany([
+  {
+    "nombre_hospital": "Hospital México",
+    "red_salud": "Región Central",
+    "coordenadas": { "type": "Point", "coordinates": [-84.1121, 9.9543] },
+    "quirofanos": [
+      { "id_sala": "MX-01", "especialidad_asignada": "Cardiovascular", "estado": "Ocupado" },
+      { "id_sala": "MX-02", "especialidad_asignada": "Oftalmología", "estado": "Disponible" },
+      { "id_sala": "MX-03", "especialidad_asignada": "Ortopedia", "estado": "Ocupado" },
+      { "id_sala": "MX-04", "especialidad_asignada": "Cirugía General", "estado": "Disponible" }
+    ],
+    "contacto_emergencias": "2242-6789"
+  },
+  {
+    "nombre_hospital": "Hospital San Juan de Dios",
+    "red_salud": "Región Central",
+    "coordenadas": { "type": "Point", "coordinates": [-84.0847, 9.9338] },
+    "quirofanos": [
+      { "id_sala": "SJD-01", "especialidad_asignada": "Cirugía General", "estado": "Disponible" },
+      { "id_sala": "SJD-02", "especialidad_asignada": "Ginecología", "estado": "Ocupado" },
+      { "id_sala": "SJD-03", "especialidad_asignada": "Ortopedia", "estado": "Mantenimiento" }
+    ],
+    "contacto_emergencias": "2547-8000"
+  },
+  {
+    "nombre_hospital": "Hospital Calderón Guardia",
+    "red_salud": "Región Central Este",
+    "coordenadas": { "type": "Point", "coordinates": [-84.0694, 9.9367] },
+    "quirofanos": [
+      { "id_sala": "CG-01", "especialidad_asignada": "Cardiovascular", "estado": "Ocupado" },
+      { "id_sala": "CG-02", "especialidad_asignada": "Ortopedia", "estado": "Disponible" },
+      { "id_sala": "CG-03", "especialidad_asignada": "Oftalmología", "estado": "Disponible" }
+    ],
+    "contacto_emergencias": "2257-7922"
+  },
+  {
+    "nombre_hospital": "Hospital San Rafael (Alajuela)",
+    "red_salud": "Región Central Norte",
+    "coordenadas": { "type": "Point", "coordinates": [-84.2141, 10.0152] },
+    "quirofanos": [
+      { "id_sala": "SR-01", "especialidad_asignada": "Ortopedia", "estado": "Disponible" },
+      { "id_sala": "SR-02", "especialidad_asignada": "Cirugía General", "estado": "Disponible" }
+    ],
+    "contacto_emergencias": "2436-1000"
+  },
+  {
+    "nombre_hospital": "Hospital Max Peralta (Cartago)",
+    "red_salud": "Región Central Sur",
+    "coordenadas": { "type": "Point", "coordinates": [-83.9224, 9.8639] },
+    "quirofanos": [
+      { "id_sala": "MP-01", "especialidad_asignada": "Cirugía General", "estado": "Disponible" },
+      { "id_sala": "MP-02", "especialidad_asignada": "Ginecología", "estado": "Ocupado" }
+    ],
+    "contacto_emergencias": "2550-1999"
+  }
+]);
+
+
+
+// Datos DE COLECCION PACIENTES: 20 PACIENTES
+
+
+db.pacientes.insertMany([
+  // Ortopedia (5 pacientes)
+  {
+    "nombre": "Amalia Robleto Escalante",
+    "cedula": "1-1234-5678",
+    "ubicacion": { "type": "Point", "coordinates": [-84.4531, 10.3238] },
+    "provincia": "Alajuela",
+    "especialidad_requerida": "Ortopedia",
+    "diagnostico_principal": "Osteoartritis severa de rodilla izquierda",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-02-15T08:00:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "escala_dolor": "8/10", "requiere_protesis": true, "alergias": ["Penicilina"] }
+  },
+  {
+    "nombre": "Esteban Quesada Madrigal",
+    "cedula": "1-0889-0112",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0789, 9.9333] },
+    "provincia": "San José",
+    "especialidad_requerida": "Ortopedia",
+    "diagnostico_principal": "Ruptura de ligamento cruzado anterior",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2025-01-20T09:00:00Z"),
+    "nivel_urgencia": 3,
+    "detalles_clinicos": { "actividad_fisica": "Alta", "inflamacion_articular": "Moderada" }
+  },
+  {
+    "nombre": "Mario Alberto Mora",
+    "cedula": "1-0456-0123",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0900, 9.9400] },
+    "provincia": "San José",
+    "especialidad_requerida": "Ortopedia",
+    "diagnostico_principal": "Fractura consolidada viciosa de cadera",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2023-11-10T10:00:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "movilidad_reducida": true, "soporte_marcha": "Silla de ruedas" }
+  },
+  {
+    "nombre": "Rodrigo Chaves Valverde",
+    "cedula": "2-0333-0444",
+    "ubicacion": { "type": "Point", "coordinates": [-84.2000, 10.0100] },
+    "provincia": "Alajuela",
+    "especialidad_requerida": "Ortopedia",
+    "diagnostico_principal": "Hernia discal L4-L5 compresión radicular",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-05-12T11:00:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "parestesia_miembros_inferiores": true, "deficit_motor": "Leve" }
+  },
+  {
+    "nombre": "Valeria Castro Brenes",
+    "cedula": "3-0411-0852",
+    "ubicacion": { "type": "Point", "coordinates": [-83.9100, 9.8500] },
+    "provincia": "Cartago",
+    "especialidad_requerida": "Ortopedia",
+    "diagnostico_principal": "Síndrome de túnel carpiano severo bilateral",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-09-01T14:00:00Z"),
+    "nivel_urgencia": 2,
+    "detalles_clinicos": { "perdida_fuerza_prensora": true, "mano_dominante": "Derecha" }
+  },
+
+  // Oftalmología (4 pacientes)
+  {
+    "nombre": "Carlos Vargas Umaña",
+    "cedula": "2-0456-0789",
+    "ubicacion": { "type": "Point", "coordinates": [-84.2231, 9.9981] },
+    "provincia": "Alajuela",
+    "especialidad_requerida": "Oftalmología",
+    "diagnostico_principal": "Catarata madura bilateral",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2025-05-10T10:30:00Z"),
+    "nivel_urgencia": 3,
+    "detalles_clinicos": { "agudeza_visual": "20/200", "presion_intraocular": "16 mmHg", "condicion_coexistente": "Diabetes Tipo 2" }
+  },
+  {
+    "nombre": "Lucía Méndez Gómez",
+    "cedula": "1-0987-0654",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0800, 9.9200] },
+    "provincia": "San José",
+    "especialidad_requerida": "Oftalmología",
+    "diagnostico_principal": "Glaucoma neovascular avanzado",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-01-15T08:00:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "presion_intraocular": "28 mmHg", "tratamiento_gotas": ["Latanoprost", "Timalol"] }
+  },
+  {
+    "nombre": "Jorge Luis Pinto",
+    "cedula": "4-0111-0222",
+    "ubicacion": { "type": "Point", "coordinates": [-84.1100, 9.9900] },
+    "provincia": "Heredia",
+    "especialidad_requerida": "Oftalmología",
+    "diagnostico_principal": "Pterigión Grado III recidivante",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-07-20T13:00:00Z"),
+    "nivel_urgencia": 2,
+    "detalles_clinicos": { "ojo_afectado": "Izquierdo", "astigmatismo_inducido": "3.5 D" }
+  },
+  {
+    "nombre": "Sofía Hernández Ruiz",
+    "cedula": "1-1555-0666",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0500, 9.9100] },
+    "provincia": "San José",
+    "especialidad_requerida": "Oftalmología",
+    "diagnostico_principal": "Desprendimiento parcial de retina",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-12-01T07:30:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "tiempo_evolucion_dias": 4, "requiere_vitrectomia": true }
+  },
+
+  // Cirugía General (4 pacientes)
+  {
+    "nombre": "María del Carmen Solano",
+    "cedula": "3-0234-0567",
+    "ubicacion": { "type": "Point", "coordinates": [-83.5241, 10.0021] },
+    "provincia": "Cartago",
+    "especialidad_requerida": "Cirugía General",
+    "diagnostico_principal": "Colelitiasis crónica sintomática",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-11-01T14:15:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "episodios_colico_ultimo_mes": 4, "presencia_barro_biliar": true }
+  },
+  {
+    "nombre": "Gabriel Monge Jiménez",
+    "cedula": "1-0777-0888",
+    "ubicacion": { "type": "Point", "coordinates": [-84.1200, 9.9600] },
+    "provincia": "San José",
+    "especialidad_requerida": "Cirugía General",
+    "diagnostico_principal": "Hernia inguinal incarcerada no estrangulada",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-08-15T09:00:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "lado_afectado": "Derecho", "reduccion_manual": "Dificultosa" }
+  },
+  {
+    "nombre": "Elena Rostropovich Quirós",
+    "cedula": "1-0222-0333",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0700, 9.9300] },
+    "provincia": "San José",
+    "especialidad_requerida": "Cirugía General",
+    "diagnostico_principal": "Eventración abdominal gigante",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2023-10-05T11:00:00Z"),
+    "nivel_urgencia": 3,
+    "detalles_clinicos": { "cirugia_previa": "Laparotomía exploradora", "requiere_malla": true }
+  },
+  {
+    "nombre": "Andrés Felipe Araya",
+    "cedula": "2-0888-0999",
+    "ubicacion": { "type": "Point", "coordinates": [-84.2200, 10.0200] },
+    "provincia": "Alajuela",
+    "especialidad_requerida": "Cirugía General",
+    "diagnostico_principal": "Quiste pilonidal infectado recurrente",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-06-18T15:00:00Z"),
+    "nivel_urgencia": 2,
+    "detalles_clinicos": { "drenajes_previos": 3, "cultivo_positivo": "Staphylococcus aureus" }
+  },
+
+  // Ginecología (4 pacientes)
+  {
+    "nombre": "Ana Lucía Benavides",
+    "cedula": "4-0122-0344",
+    "ubicacion": { "type": "Point", "coordinates": [-84.1167, 10.0000] },
+    "provincia": "Heredia",
+    "especialidad_requerida": "Ginecología",
+    "diagnostico_principal": "Miomatosis uterina sintomática",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-08-12T11:00:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "tamano_mioma_cm": 7.5, "anemia_secundaria": true }
+  },
+  {
+    "nombre": "Beatriz Pinzón Solano",
+    "cedula": "3-0555-0666",
+    "ubicacion": { "type": "Point", "coordinates": [-83.9200, 9.8700] },
+    "provincia": "Cartago",
+    "especialidad_requerida": "Ginecología",
+    "diagnostico_principal": "Endometriosis profunda infiltrante Severa Grado IV",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-03-30T10:00:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "compromiso_intestinal": true, "escala_dolor_pelvico": "9/10" }
+  },
+  {
+    "nombre": "Carmen Sevilla Matarrita",
+    "cedula": "5-0123-0456",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0800, 9.9400] },
+    "provincia": "San José",
+    "especialidad_requerida": "Ginecología",
+    "diagnostico_principal": "Prolapso de cúpula vaginal Severo",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-04-10T12:00:00Z"),
+    "nivel_urgencia": 3,
+    "detalles_clinicos": { "incontinencia_urinaria_esfuerzo": true, "edad_paciente": 68 }
+  },
+  {
+    "nombre": "Diana Ross Alpízar",
+    "cedula": "1-1444-0777",
+    "ubicacion": { "type": "Point", "coordinates": [-84.1300, 9.9800] },
+    "provincia": "Heredia",
+    "especialidad_requerida": "Ginecología",
+    "diagnostico_principal": "Quistoadenoma mucinoso complejo de ovario",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-10-02T08:45:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "diametro_ovario_cm": 12.0, "marcador_ca125": "Normal" }
+  },
+
+  // Cardiovascular (3 pacientes)
+  {
+    "nombre": "José María Figueres Olsen",
+    "cedula": "1-0111-0999",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0900, 9.9350] },
+    "provincia": "San José",
+    "especialidad_requerida": "Cardiovascular",
+    "diagnostico_principal": "Estenosis aórtica severa sintomática",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-01-05T08:00:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "area_valvular_cm2": 0.6, "fraccion_eyeccion": "45%", "sincopes_recientes": 2 }
+  },
+  {
+    "nombre": "Franklin Chang Díaz",
+    "cedula": "1-0500-0500",
+    "ubicacion": { "type": "Point", "coordinates": [-84.0400, 9.9400] },
+    "provincia": "San José",
+    "especialidad_requerida": "Cardiovascular",
+    "diagnostico_principal": "Aneurisma de aorta abdominal infrarenal",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2024-02-28T14:20:00Z"),
+    "nivel_urgencia": 4,
+    "detalles_clinicos": { "diametro_aneurisma_mm": 54, "hipertensión_controlada": false }
+  },
+  {
+    "nombre": "Óscar Arias Sánchez",
+    "cedula": "4-0088-0099",
+    "ubicacion": { "type": "Point", "coordinates": [-84.1250, 9.9850] },
+    "provincia": "Heredia",
+    "especialidad_requerida": "Cardiovascular",
+    "diagnostico_principal": "Enfermedad arterial coronaria trivascular",
+    "estado_lista": "En Espera",
+    "fecha_ingreso_lista": new Date("2023-12-12T11:10:00Z"),
+    "nivel_urgencia": 5,
+    "detalles_clinicos": { "requiere_bypass": true, "numero_puentes": 3, "angina_reposo": true }
+  }
+]);
