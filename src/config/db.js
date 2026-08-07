@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/hospitalesDB');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/CCSS_Optimizacion_Quirofanos');
     console.log('MongoDB conectado');
   } catch (error) {
     console.error('Error de conexión:', error);
