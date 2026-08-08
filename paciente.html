@@ -52,9 +52,8 @@
         <button class="btn btn-success fw-bold px-3" onclick="abrirModalCrear()">
           <i class="fa-solid fa-user-plus me-1"></i> Agregar Paciente
         </button>
-        <button class="btn btn-warning text-dark fw-bold" onclick="obtenerTodosLosPacientes()">
-          <i class="fa-solid fa-rotate-right me-1"></i> Sincronizar
-        </button>
+        <!-- <button class="btn btn-warning text-dark fw-bold" onclick="obtenerTodosLosPacientes()">
+         <i class="fa-solid fa-rotate-right me-1"></i> Sincronizar</button> -->
       </div>
     </div>
   </nav>
@@ -74,12 +73,11 @@
                 <th class="ps-4">Cédula</th>
                 <th>Nombre Completo</th>
                 <th>Provincia</th>
-                <th>Especialidad</th>
+                <th>Especialidad Requerida</th>
                 <th>Diagnóstico Principal</th>
                 <th class="text-center">Urgencia</th>
                 <th>Estado</th>
-                <th>Detalles Clínicos</th>
-                <th class="text-center pe-4" style="min-width: 140px;">Acciones</th>
+                <th class="d-none">Detalles Clínicos</th>
               </tr>
             </thead>
             <tbody id="tabla-todos-pacientes">
@@ -95,7 +93,7 @@
       <div class="modal-content">
         <div class="modal-header bg-ccss text-white">
           <h5 class="modal-title fw-bold" id="modalTitulo">Agregar Nuevo Paciente</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="ocultarModal('modalPaciente')"></button>
         </div>
         <div class="modal-body p-4">
           <form id="formPaciente">
@@ -154,7 +152,7 @@
           </form>
         </div>
         <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="ocultarModal('modalPaciente')">Cancelar</button>
           <button type="button" class="btn btn-primary fw-bold" onclick="guardarPaciente()">
             <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Registro
           </button>

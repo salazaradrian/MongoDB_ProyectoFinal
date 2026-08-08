@@ -66,9 +66,9 @@
         <button class="btn btn-success fw-bold px-3" onclick="abrirModalHospitalCrear()">
           <i class="fa-solid fa-hospital-user me-1"></i> Agregar Hospital
         </button>
-        <button class="btn btn-warning text-dark fw-bold" onclick="obtenerTodosLosHospitales()">
+        <!-- <button class="btn btn-warning text-dark fw-bold" onclick="obtenerTodosLosHospitales()">
           <i class="fa-solid fa-rotate-right me-1"></i> Sincronizar
-        </button>
+        </button> -->
       </div>
     </div>
   </nav>
@@ -91,7 +91,7 @@
       <div class="modal-content">
         <div class="modal-header bg-ccss text-white">
           <h5 class="modal-title fw-bold" id="modalHospitalTitulo">Registrar Nuevo Hospital</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="ocultarModal('modalHospital')"></button>
         </div>
         <div class="modal-body p-4">
           <form id="formHospital">
@@ -136,7 +136,7 @@
           </form>
         </div>
         <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="ocultarModal('modalHospital')">Cancelar</button>
           <button type="button" class="btn btn-primary fw-bold" onclick="guardarHospital()">
             <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Hospital
           </button>
@@ -145,12 +145,14 @@
     </div>
   </div>
 
+<!-- Modal para agregar un nuevo quirófano -->
+
   <div class="modal fade" id="modalQuirofano" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header bg-ccss text-white">
           <h5 class="modal-title fw-bold">Agregar nuevo quirófano</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="ocultarModal('modalQuirofano')"></button>
         </div>
         <div class="modal-body p-4">
           <form id="formQuirofano">
@@ -174,7 +176,7 @@
           </form>
         </div>
         <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="ocultarModal('modalQuirofano')">Cancelar</button>
           <button type="button" class="btn btn-primary fw-bold" onclick="guardarQuirofanoEmbebido()">
             <i class="fa-solid fa-floppy-disk me-1"></i> Guardar quirófano
           </button>
@@ -183,17 +185,19 @@
     </div>
   </div>
 
+<!-- Modal para asignar un paciente a un quirófano -->
+
   <div class="modal fade" id="modalAsignacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header bg-ccss text-white">
           <h5 class="modal-title fw-bold" id="modalAsignacionTitulo">Búsqueda de paciente</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="ocultarModal('modalAsignacion')"></button>
         </div>
         <div class="modal-body" id="modalAsignacionBody">
         </div>
         <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="ocultarModal('modalAsignacion')">Cerrar</button>
           <button type="button" class="btn btn-success fw-bold" id="btnAsignarPaciente" onclick="confirmarAsignacion()">Asignar paciente</button>
         </div>
       </div>
