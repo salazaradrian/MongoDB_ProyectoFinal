@@ -342,12 +342,6 @@ async function buscarPacienteCandidato(hospitalId, indexQuirofano) {
 
   if (!h || !q) return;
 
-  if (q.estado !== 'Disponible') {
-    // Evita buscar pacientes si la sala no está disponible
-    mostrarModalAsignacion('Quirófano no disponible', '<div class="alert alert-warning mb-0">Solo se pueden buscar pacientes cuando el quirófano está en estado Disponible.</div>', false);
-    return;
-  }
-
   try {
     const res = await fetch(API_PACIENTES_URL);
     let pacientes = await res.json();
@@ -357,25 +351,32 @@ async function buscarPacienteCandidato(hospitalId, indexQuirofano) {
     }
 
     const candidatos = pacientes
-      // Filtra pacientes en espera con datos y especialidad compatibles
+      // Toma solo pacientes que estén en espera y que tengan datos completos
       .filter(p => p && p.estado_lista === 'En Espera' && p.ubicacion?.coordinates && p.especialidad_requerida)
       .filter(p => {
+
+        // Compara la especialidad del paciente con la especialidad de la sala
         const especialidadPaciente = (p.especialidad_requerida || '').toLowerCase();
         const especialidadSala = (q.especialidad_asignada || '').toLowerCase();
         return especialidadPaciente.includes(especialidadSala) || especialidadSala.includes(especialidadPaciente);
       })
       .map(p => ({
         ...p,
+
+        // Calcula qué tan cerca está el paciente del hospital
         distanciaKm: calcularDistanciaKm(h.coordenadas?.coordinates, p.ubicacion?.coordinates)
       }))
       .sort((a, b) => {
+
+        // Ordena por urgencia, luego por distancia y por antigüedad en la lista
         if (b.nivel_urgencia !== a.nivel_urgencia) return b.nivel_urgencia - a.nivel_urgencia;
         if (a.distanciaKm !== b.distanciaKm) return a.distanciaKm - b.distanciaKm;
         return new Date(a.fecha_ingreso_lista || 0) - new Date(b.fecha_ingreso_lista || 0);
       });
 
     const candidato = candidatos[0];
-    // Guarda la sala y el paciente elegido para asignarlos después
+
+    // Guarda la sala y el paciente elegido para usar esa información después
     seleccionQuirofanoActual = { hospitalId, indexQuirofano, hospital: h, quironfano: q };
     pacienteSeleccionadoActual = candidato || null;
 
@@ -385,6 +386,7 @@ async function buscarPacienteCandidato(hospitalId, indexQuirofano) {
     }
 
     const distanciaTexto = candidato.distanciaKm !== null ? `${candidato.distanciaKm.toFixed(1)} km` : 'No disponible';
+    // Muestra la recomendación en una ventana emergente
     mostrarModalAsignacion(
       'Paciente recomendado',
       `
@@ -413,14 +415,14 @@ function mostrarModalAsignacion(titulo, contenido, mostrarBoton) {
 }
 
 async function confirmarAsignacion() {
-  // Confirma la asignación y cambia el estado de la sala y del paciente
+  // Cuando se confirma, se asigna el paciente a la sala y se actualizan los estados
   if (!seleccionQuirofanoActual || !pacienteSeleccionadoActual) return;
 
   const { hospitalId, indexQuirofano: indexQuirofanoActual } = seleccionQuirofanoActual;
   const h = listaHospitalesLocal.find(item => item._id === hospitalId);
 
   if (h?.quirofanos?.[indexQuirofanoActual]) {
-    // Marca la sala como ocupada
+    // Cambia la sala a ocupada porque ya tiene un paciente asignado
     h.quirofanos[indexQuirofanoActual].estado = 'Ocupado';
   }
 
@@ -432,7 +434,7 @@ async function confirmarAsignacion() {
     });
 
     await fetch(`${API_PACIENTES_URL}/${pacienteSeleccionadoActual._id}`, {
-      // Cambia el estado del paciente a asignado
+      // Cambia el estado del paciente a asignado en la base de datos
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado_lista: 'Asignado' })
