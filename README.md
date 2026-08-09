@@ -67,3 +67,9 @@ src/
   scripts/seed.js       # carga datos de ejemplo
   queries/consultas.mongodb.js  # playground de consultas MongoDB
 ```
+------
+
+#Usuario Atlas 
+username: proyectofinal
+password: Welcome1
+

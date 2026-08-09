@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -7,6 +9,7 @@ const pacientesRoutes = require('./routes/pacientesRoutes');
 
 const app = express();
 
+// Conexión a la base de datos
 connectDB();
 
 app.use(cors());
